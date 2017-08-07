@@ -198,7 +198,7 @@ def read_arf(arg):
     ----------
     arg
         If a string then the name of the file, otherwise it is
-        backend specific (e.g. an ARFCrate for pycrates).
+        backend specific (e.g. a Crate for pycrates).
 
     Returns
     -------
@@ -211,18 +211,36 @@ def read_arf(arg):
     # it to override the config setting.
     #
     if 'emin' not in data:
-        data['emin'] = ogip_emin
+        data['ethresh'] = ogip_emin
 
     return DataARF(filename, **data)
 
 
 def read_rmf(arg):
-    """
-    read_rmf( filename )
+    """Read in an RMF.
 
-    read_rmf( RMFCrate )
+    The ogip configuration block is used to control the behavior
+    in cases where the data does not match the OGIP standard.
+
+    Parameters
+    ----------
+    arg
+        If a string then the name of the file, otherwise it is
+        backend specific (e.g. a RMFCrate for pycrates).
+
+    Returns
+    -------
+    rmf : DataRMF
+        The RMF.
     """
     data, filename = backend.get_rmf_data(arg)
+
+    # It is unlikely that the backend will set this, but allow
+    # it to override the config setting.
+    #
+    if 'emin' not in data:
+        data['ethresh'] = ogip_emin
+
     return DataRMF(filename, **data)
 
 
