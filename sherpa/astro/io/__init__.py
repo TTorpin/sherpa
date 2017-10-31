@@ -48,6 +48,30 @@ config.read(get_config())
 io_opt = config.get('options', 'io_pkg')
 io_opt = str(io_opt).strip().lower()
 
+# Python 3 allows the following (although should move to the dictionary
+# style provided by the mapping protocal access.
+#
+# ogip_emin = config.get('ogip', 'minimum_energy', fallback='1.0e-10')
+if config.has_option('ogip', 'minimum_energy'):
+    ogip_emin = config.get('ogip', 'minimum_energy')
+else:
+    # The original version of minimum_energy is 1e-10 keV, so use it as
+    # the default value.
+    ogip_emin = '1.0e-10'
+
+if ogip_emin.upper() == 'NONE':
+    ogip_emin = None
+else:
+    emsg = "Invalid value for [ogip] minimum_energy config value; " + \
+           "it must be None or a float > 0"
+    try:
+        ogip_emin = float(ogip_emin)
+    except ValueError:
+        raise ValueError(emsg)
+
+    if ogip_emin <= 0.0:
+        raise ValueError(emsg)
+
 if io_opt.startswith('pycrates') or io_opt.startswith('crates'):
     io_opt = 'crates_backend'
 
@@ -165,22 +189,58 @@ def read_image(arg, coord='logical', dstype=DataIMG):
 
 
 def read_arf(arg):
-    """
-    read_arf( filename )
+    """Read in an ARF.
 
-    read_arf( ARFCrate )
+    The ogip configuration block is used to control the behavior
+    in cases where the data does not match the OGIP standard.
+
+    Parameters
+    ----------
+    arg
+        If a string then the name of the file, otherwise it is
+        backend specific (e.g. a Crate for pycrates).
+
+    Returns
+    -------
+    arf : DataARF
+        The ARF.
     """
     data, filename = backend.get_arf_data(arg)
+
+    # It is unlikely that the backend will set this, but allow
+    # it to override the config setting.
+    #
+    if 'emin' not in data:
+        data['ethresh'] = ogip_emin
+
     return DataARF(filename, **data)
 
 
 def read_rmf(arg):
-    """
-    read_rmf( filename )
+    """Read in an RMF.
 
-    read_rmf( RMFCrate )
+    The ogip configuration block is used to control the behavior
+    in cases where the data does not match the OGIP standard.
+
+    Parameters
+    ----------
+    arg
+        If a string then the name of the file, otherwise it is
+        backend specific (e.g. a RMFCrate for pycrates).
+
+    Returns
+    -------
+    rmf : DataRMF
+        The RMF.
     """
     data, filename = backend.get_rmf_data(arg)
+
+    # It is unlikely that the backend will set this, but allow
+    # it to override the config setting.
+    #
+    if 'emin' not in data:
+        data['ethresh'] = ogip_emin
+
     return DataRMF(filename, **data)
 
 
