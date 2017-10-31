@@ -10240,7 +10240,7 @@ class Session(sherpa.ui.utils.Session):
         return plotobj
 
     def _set_plot_item(self, plottype, item, value):
-        keys = self._plot_types.keys()[:]
+        keys = list(self._plot_types.keys())
 
         if plottype.strip().lower() != "all":
             if plottype not in keys:
